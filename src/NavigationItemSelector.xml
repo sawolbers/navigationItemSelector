@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget id="mxblue.navigationitemselector.NavigationItemSelector" pluginWidget="true" needsEntityContext="true" offlineCapable="true"
+        supportedPlatform="Web"
+        xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Navigation Item Selector</name>
+    <description>Selects the correct navigation item when a page is opened</description>
+    <icon/>
+    <properties>
+        <propertyGroup caption="General">
+            <property key="menuName" type="expression" required="true">
+                <caption>Menu widget name</caption>
+                <description>Menu widget name in modeler e.g. "menuBar1"</description>
+                <returnType type="String" />
+            </property>
+            <property key="selectorType" type="enumeration" defaultValue="byCaption">
+                <caption>Selector type</caption>
+                <description>By caption if you want to highlight element by item caption, by index if you want to highlight element at specified position (first item at position 0)</description>
+                <enumerationValues>
+                    <enumerationValue key="byCaption">by caption</enumerationValue>
+                    <enumerationValue key="byIndex">by index</enumerationValue>
+                </enumerationValues>
+            </property>
+            <property key="itemCaption" type="expression" required="false">
+                <caption>Menu item caption</caption>
+                <description>Menu item caption e.g. "Home"</description>
+                <returnType type="String" />
+            </property>
+            <property key="itemIndex" type="integer" required="true" defaultValue="-1">
+                <caption>Menu item index</caption>
+                <description>Menu item index, first element is at index 0</description>
+            </property>
+        </propertyGroup>
+    </properties>
+</widget>

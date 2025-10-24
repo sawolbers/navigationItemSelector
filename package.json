@@ -1,0 +1,41 @@
+{
+  "name": "navigationitemselector",
+  "widgetName": "NavigationItemSelector",
+  "version": "1.0.0",
+  "description": "Selects the correct navigation item when a page is opened",
+  "copyright": "MxBlue 2025",
+  "author": "Stephan Wolbers",
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT",
+  "config": {
+    "projectPath": "./tests/testProject",
+    "mendixHost": "http://localhost:8080",
+    "developmentPort": 3000
+  },
+  "packagePath": "mxblue",
+  "scripts": {
+    "start": "pluggable-widgets-tools start:server",
+    "dev": "pluggable-widgets-tools start:web",
+    "build": "pluggable-widgets-tools build:web",
+    "lint": "pluggable-widgets-tools lint",
+    "lint:fix": "pluggable-widgets-tools lint:fix",
+    "prerelease": "npm run lint",
+    "release": "pluggable-widgets-tools release:web"
+  },
+  "devDependencies": {
+    "@mendix/pluggable-widgets-tools": "^10.15.0"
+  },
+  "dependencies": {
+    "classnames": "^2.2.6"
+  },
+  "resolutions": {
+    "react": "^18.2.0",
+    "react-native": "0.72.7"
+  },
+  "overrides": {
+    "react": "^18.2.0",
+    "react-native": "0.72.7"
+  }
+}
