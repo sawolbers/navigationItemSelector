@@ -26,6 +26,11 @@
                 <description>Menu item caption e.g. "Home"</description>
                 <returnType type="String" />
             </property>
+            <property key="captionTranslations" type="string" multiline="true" required="false">
+                <caption>Caption translations (JSON)</caption>
+                <description> Provide language-to-caption mapping in JSON format, e.g. {"en_US":"About me","nl_NL":"Over mij"}. The widget will automatically use the caption for the current user language.
+                </description>
+            </property>
             <property key="itemIndex" type="integer" required="true" defaultValue="-1">
                 <caption>Menu item index</caption>
                 <description>Menu item index, first element is at index 0</description>

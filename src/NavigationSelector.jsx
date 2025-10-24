@@ -1,82 +1,94 @@
 import { Component, createElement } from "react";
 import "./ui/NavigationSelector.css";
 
-const logger =
+const rawLogger =
     window.mx?.logger && typeof window.mx.logger.getLogger === "function"
         ? window.mx.logger.getLogger("NavigationSelector")
-        : {
-              debug: (...a) => console.debug("[NavigationSelector]", ...a),
-              info:  (...a) => console.info("[NavigationSelector]",  ...a),
-              warn:  (...a) => console.warn("[NavigationSelector]",  ...a),
-              error: (...a) => console.error("[NavigationSelector]", ...a)
-          };
+        : console;
+
+const logger = ["debug", "info", "warn", "error"].reduce((acc, level) => {
+    acc[level] = (...args) => {
+        const msg = args
+            .map(a =>
+                typeof a === "object"
+                    ? JSON.stringify(a, null, 2)
+                    : String(a)
+            )
+            .join(" ");
+        rawLogger[level](`[NavigationSelector] ${msg}`);
+    };
+    return acc;
+}, {});
+
+function getLanguageCode() {
+    try {
+        const s = mx.session?.sessionData || {};
+        const raw =
+            s.locale?.code ||
+            s.languageCode ||
+            s.user?.language?.code ||
+            mx.session?.getConfig?.()?.locale?.code ||
+            "en_US";
+        return String(raw).replace("-", "_").toLowerCase();
+    } catch {
+        return "en_us";
+    }
+}
+
 
 export default class NavigationSelector extends Component {
     componentDidMount() {
         this.menuName = this.props.menuName?.value;
         this.selectorType = this.props.selectorType;
-        this.itemCaption = this.props.itemCaption?.value;
         this.itemIndex = this.props.itemIndex;
-        this.navEl = null;
-        this.lastActivatedEl = null;
-        this.boundClickHandler = this.onNavClick.bind(this);
+        this.itemCaption = this.getLocalizedCaption();
 
-        if (!this.menuName) {
-            logger.error("Missing menuName");
-            return;
-        }
-
-        logger.info("Mounted", {
+        logger.debug("Mounted", {
             menuName: this.menuName,
             selectorType: this.selectorType,
             itemCaption: this.itemCaption,
             itemIndex: this.itemIndex
         });
 
-        // 1) initial activation once nav is rendered
-        this.waitForNav(() => {
-            this.attachClickHandler();
-            this.activateCurrent();
-        });
-
-        // 2) re-run after any Mendix page open
-        this.originalOpenForm = mx.ui.openForm;
-        mx.ui.openForm = (...args) => {
-            const ret = this.originalOpenForm.apply(mx.ui, args);
-            // Schedule after the page actually renders
-            requestAnimationFrame(() => this.activateCurrent());
-            return ret;
-        };
+        this.waitForNav(() => this.activateCurrent());
     }
 
-    componentWillUnmount() {
-        if (this.interval) clearInterval(this.interval);
+    // --- NEW helper ---------------------------------------------------------
+    getLocalizedCaption() {
+        const baseCaption = this.props.itemCaption?.value || "";
+        const translations =
+            typeof this.props.captionTranslations === "string"
+            ? this.props.captionTranslations
+            : this.props.captionTranslations?.value;
 
-        // Restore mx.ui.openForm
-        if (this.originalOpenForm) {
-            mx.ui.openForm = this.originalOpenForm;
-            this.originalOpenForm = null;
+        logger.debug("captionTranslations raw:", translations);
+
+        if (!translations) {
+            logger.warn("No input found in captionTranslations:");
+            return baseCaption;
         }
 
-        // Detach click listener
-        if (this.navEl && this.boundClickHandler) {
-            this.navEl.removeEventListener("click", this.boundClickHandler, true);
-        }
+        try {
+            const parsed = JSON.parse(translations);
+            const lang = getLanguageCode();
+            const map = Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k.replace("-", "_").toLowerCase(), v])); // Normalize all keys to lowercase with underscores
+            const normalized = lang.replace("-", "_").toLowerCase(); // Normalize current language
+            const match = map[normalized] || map[normalized.split("_")[0]] || map["en_us"]; // Try full language (en_us) → base (en) → fallback
 
-        // Clear our last active (so it doesn’t “stick” across pages)
-        if (this.lastActivatedEl) {
-            this.lastActivatedEl.classList.remove("active");
-            this.lastActivatedEl = null;
+            if (match) {
+                logger.debug("Using localized caption", { lang, caption: match });
+                return match;
+            }
+        } catch (e) {
+            logger.warn("Invalid JSON in captionTranslations:", e);
         }
-
-        this.navEl = null;
+        return baseCaption;
     }
 
     waitForNav(onReady) {
         const selector = `.mx-name-${this.menuName}`;
         this.interval = setInterval(() => {
             const nav = document.querySelector(selector);
-            logger.debug("Looking for nav:", selector, !!nav);
             if (nav) {
                 clearInterval(this.interval);
                 this.interval = null;
@@ -86,79 +98,37 @@ export default class NavigationSelector extends Component {
         }, 200);
     }
 
-    attachClickHandler() {
-        if (!this.navEl) return;
-        // Use capture to catch clicks before Mendix mutates anything
-        this.navEl.addEventListener("click", this.boundClickHandler, true);
-    }
-
-    onNavClick(e) {
-        const anchor = e.target?.closest?.('a[role="menuitem"]');
-        if (!anchor || !this.navEl?.contains(anchor)) return;
-
-        // Update active immediately on click
-        this.resetAllActive();
-        const isMenuBar = this.isMenuBar();
-        const target = isMenuBar ? anchor : anchor.closest("li") || anchor;
-        if (target) {
-            target.classList.add("active");
-            this.lastActivatedEl = target;
-            logger.info("Activated via click:", anchor.title || anchor.innerText);
-        }
-    }
-
     activateCurrent() {
         if (!this.navEl) return;
-
-        const items = this.collectItems();
-        if (items.length === 0) return;
-
+        const items = [...this.navEl.querySelectorAll('a[role="menuitem"], li[role="menuitem"] a')];
         let match = null;
 
         if (this.selectorType === "byIndex" && this.itemIndex >= 0 && this.itemIndex < items.length) {
             match = items[this.itemIndex];
         } else if (this.selectorType === "byCaption" && this.itemCaption) {
             const want = this.itemCaption.trim().toLowerCase();
-            match = items.find(a =>
-                (a.title && a.title.trim().toLowerCase() === want) ||
-                (a.innerText && a.innerText.trim().toLowerCase() === want)
+            match = items.find(
+                a =>
+                    (a.title && a.title.trim().toLowerCase() === want) ||
+                    (a.innerText && a.innerText.trim().toLowerCase() === want)
             );
         }
 
-        this.resetAllActive();
+        // Clear all active
+        this.navEl.querySelectorAll(".active").forEach(el => el.classList.remove("active"));
 
         if (match) {
-            const isMenuBar = this.isMenuBar();
-            const target = isMenuBar ? match : match.closest("li") || match;
-            if (target) {
-                target.classList.add("active");
-                this.lastActivatedEl = target;
-                logger.info("Activated programmatically:", match.title || match.innerText || `(index ${this.itemIndex})`);
-            }
+            const target = match.closest("li") || match;
+            target.classList.add("active");
+            logger.debug("Activated navigation item:", match.title || match.innerText);
         } else {
-            logger.warn("No match found for", this.selectorType === "byCaption" ? this.itemCaption : this.itemIndex);
+            logger.warn("No matching item found for caption:", this.itemCaption);
         }
     }
 
-    resetAllActive() {
-        if (!this.navEl) return;
-        this.navEl.querySelectorAll(".active").forEach(el => el.classList.remove("active"));
-        this.lastActivatedEl = null;
-    }
-
-    collectItems() {
-        // Handles menu bar + tree/list
-        // menubar: <a role="menuitem">
-        // tree/list: <li><a role="menuitem"></a></li>
-        return [
-            ...this.navEl.querySelectorAll('a[role="menuitem"], li[role="menuitem"] a')
-        ];
-    }
-
-    isMenuBar() {
-        return this.navEl &&
-               this.navEl.querySelector('a[role="menuitem"]') &&
-               !this.navEl.querySelector("ul li");
+    componentWillUnmount() {
+        if (this.interval) clearInterval(this.interval);
+        if (this.langCheckInterval) clearInterval(this.langCheckInterval);
     }
 
     render() {
