@@ -1,7 +1,7 @@
 {
   "name": "navigationselector",
   "widgetName": "NavigationSelector",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Selects the correct navigation item when a page is opened",
   "copyright": "MxBlue 2025",
   "author": "Stephan Wolbers",
