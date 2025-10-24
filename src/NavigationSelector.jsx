@@ -1,17 +1,17 @@
 import { Component, createElement } from "react";
-import "./ui/NavigationItemSelector.css";
+import "./ui/NavigationSelector.css";
 
 const logger =
     window.mx?.logger && typeof window.mx.logger.getLogger === "function"
-        ? window.mx.logger.getLogger("NavigationItemSelector")
+        ? window.mx.logger.getLogger("NavigationSelector")
         : {
-              debug: (...a) => console.debug("[NavigationItemSelector]", ...a),
-              info:  (...a) => console.info("[NavigationItemSelector]",  ...a),
-              warn:  (...a) => console.warn("[NavigationItemSelector]",  ...a),
-              error: (...a) => console.error("[NavigationItemSelector]", ...a)
+              debug: (...a) => console.debug("[NavigationSelector]", ...a),
+              info:  (...a) => console.info("[NavigationSelector]",  ...a),
+              warn:  (...a) => console.warn("[NavigationSelector]",  ...a),
+              error: (...a) => console.error("[NavigationSelector]", ...a)
           };
 
-export default class NavigationItemSelector extends Component {
+export default class NavigationSelector extends Component {
     componentDidMount() {
         this.menuName = this.props.menuName?.value;
         this.selectorType = this.props.selectorType;

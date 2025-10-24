@@ -26,5 +26,5 @@ export class preview {
 
 // Keep this if you have styles under ./ui/
 export function getPreviewCss() {
-    return require("./ui/NavigationItemSelector.css");
+    return require("./ui/NavigationSelector.css");
 }

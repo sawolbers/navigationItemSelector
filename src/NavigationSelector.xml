@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<widget id="mxblue.navigationitemselector.NavigationItemSelector" pluginWidget="true" needsEntityContext="true" offlineCapable="true"
+<widget id="mxblue.navigationselector.NavigationSelector" pluginWidget="true" needsEntityContext="true" offlineCapable="true"
         supportedPlatform="Web"
         xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
-    <name>Navigation Item Selector</name>
+    <name>Navigation Selector</name>
     <description>Selects the correct navigation item when a page is opened</description>
     <icon/>
     <properties>
