@@ -128,7 +128,6 @@ export default class NavigationSelector extends Component {
 
     componentWillUnmount() {
         if (this.interval) clearInterval(this.interval);
-        if (this.langCheckInterval) clearInterval(this.langCheckInterval);
     }
 
     render() {
